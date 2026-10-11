@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Keeps search engines from listing this private page -->
+<meta name="robots" content="noindex">
+<title>Hello, Brigid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Colors: change them here ---------- */
+  :root{--night:#14162b;--panel:#1e2140;--line:#3a3e6b;--lilac:#b9a8ff;--peach:#ffc58a;--text:#f2efff;--muted:#a7a3c9}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--night);color:var(--text);font:400 1rem/1.5 "DM Sans",system-ui,sans-serif;display:flex;justify-content:center;padding:24px 16px 56px}
+  main{width:100%;max-width:520px}
+
+  /* Top bar: "Kemboi - - - - Brigid" */
+  .route{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem}
+  .route i{flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--lilac) 0 6px,transparent 6px 12px)}
+
+  /* Progress bar (4 segments fill as she moves forward) */
+  .dots{display:flex;gap:6px;margin:18px 0 6px}
+  .dots b{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .3s}
+  .dots b.on{background:var(--peach)}
+
+  /* Text */
+  h1,h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+  h1{font-weight:800;font-size:clamp(3rem,16vw,5.5rem);line-height:.95;color:var(--peach);margin:28px 0 12px}
+  h2{font-weight:800;font-size:1.7rem;line-height:1.15;margin:24px 0 8px}
+  p{margin:0 0 16px}
+  .sub,.note{color:var(--muted)}
+  .note{font-size:.85rem}
+  .sr{position:absolute;left:-9999px}            /* label visible to screen readers only */
+  section[hidden]{display:none}
+
+  /* Mood buttons */
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .chip{border:1.5px solid var(--lilac);background:transparent;color:var(--text);padding:14px 10px;border-radius:14px;font:inherit;cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--lilac);color:#1a1640;font-weight:500}
+
+  /* Inputs and buttons */
+  textarea{width:100%;min-height:140px;resize:vertical;padding:14px;font:inherit;background:var(--panel);color:var(--text);border:1.5px solid var(--line);border-radius:14px}
+  .btn{margin-top:14px;width:100%;padding:14px;border:0;border-radius:14px;cursor:pointer;background:var(--peach);color:#2b1a05;font:500 1.05rem "DM Sans",sans-serif;display:block;text-align:center;text-decoration:none}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.alt{background:transparent;color:var(--text);border:1.5px solid var(--lilac)}
+  .btn[hidden]{display:none}
+  .back{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;padding:8px 0;margin-top:6px}
+  :is(textarea,.chip,.btn,.back):focus-visible{outline:3px solid var(--peach);outline-offset:2px}  /* visible keyboard focus */
+
+  /* Chat bubbles: Kemboi on the left, Brigid on the right */
+  .bubble{padding:13px 16px;border-radius:18px;margin:12px 0;max-width:90%;animation:pop .25s ease-out}
+  .him{background:var(--panel);border-bottom-left-radius:4px}
+  .her{background:var(--lilac);color:#1a1640;margin-left:auto;border-bottom-right-radius:4px;white-space:pre-wrap}
+  .who{font-size:.8rem;color:var(--muted);margin:0 0 2px}
+  .status{margin-top:14px;font-size:.9rem}
+  .ok{color:#8fe3b0}
+  .warn{color:var(--peach)}
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.bubble{animation:none}.dots b{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="route"><span class="meName">Kemboi</span><i></i><span class="herName">Brigid</span></div>
+  <div class="dots" id="dots" aria-hidden="true"><b></b><b></b><b></b><b></b></div>
+
+  <!-- STEP 0: Intro -->
+  <section data-step="0">
+    <h1 tabindex="-1">HELLO,<br><span class="herName">Brigid</span></h1>
+    <p class="sub">I'm at my university, you're at yours. Three quick questions about your day, and I'll answer you right here.</p>
+    <button class="btn" data-next>Say hello back</button>
+    <p class="note" style="margin-top:14px">Your answers are sent to <span class="meName">Kemboi</span> only.</p>
+  </section>
+
+  <!-- STEP 1: Mood (she must pick one) -->
+  <section data-step="1" hidden>
+    <h2 tabindex="-1">HELLO <span class="herName">Brigid</span> 👋<br>How is your day going?</h2>
+    <p class="sub">Pick the one that fits best.</p>
+    <div class="chips" role="group" aria-label="Your mood today">
+      <button class="chip" aria-pressed="false" data-mood="great">😄 Great</button>
+      <button class="chip" aria-pressed="false" data-mood="okay">🙂 Okay</button>
+      <button class="chip" aria-pressed="false" data-mood="tired">😴 Tired</button>
+      <button class="chip" aria-pressed="false" data-mood="stressed">😩 Stressed</button>
+    </div>
+    <button class="btn" data-next disabled id="moodNext">Continue</button>
+  </section>
+
+  <!-- STEP 2: Her day (min 3, max 1500 characters) -->
+  <section data-step="2" hidden>
+    <h2 tabindex="-1">What happened at your university today?</h2>
+    <p class="sub">Classes, food, friends, anything. Write it your way.</p>
+    <label for="day" class="sr">Describe your day</label>
+    <textarea id="day" maxlength="1500" placeholder="Today at my university..."></textarea>
+    <button class="btn" data-next disabled id="dayNext">Continue</button>
+    <button class="back" data-back>Back</button>
+  </section>
+
+  <!-- STEP 3: Optional request (max 600 characters) -->
+  <section data-step="3" hidden>
+    <h2 tabindex="-1">Anything you need from me?</h2>
+    <p class="sub">A call, a joke, a reminder to eat. Optional, you can leave it empty.</p>
+    <label for="need" class="sr">What you need from me</label>
+    <textarea id="need" maxlength="600" placeholder="I would love it if you..."></textarea>
+    <button class="btn" id="sendBtn">Send to <span class="meName">Kemboi</span></button>
+    <button class="back" data-back>Back</button>
+  </section>
+
+  <!-- STEP 4: Result (aria-live announces new messages to screen readers) -->
+  <section data-step="4" hidden aria-live="polite">
+    <div id="thread"></div>
+    <p class="status" id="status"></p>
+    <a class="btn alt" id="waBtn" target="_blank" rel="noopener" hidden>Send it on WhatsApp instead</a>
+  </section>
+</main>
+
+<script>
+/* =====================================================
+   EDIT THESE 4 VALUES BEFORE YOU UPLOAD TO GITHUB
+   ===================================================== */
+const CONFIG = {
+  myName:   "Kemboi",   // your name, shown on the page and in the replies
+  herName:  "Brigid",   // her name, shown in the greeting
+  formUrl:  "https://formspree.io/f/YOUR_FORM_ID", // your Formspree link (formspree.io, free)
+  whatsapp: "254799474782" // your number: country code first, no +, no spaces, no leading 0
+};
+
+/* =====================================================
+   YOUR REPLIES: edit the text inside the quotes freely
+   ===================================================== */
+
+// Reply based on the mood she picked
+const MOOD_REPLIES = {
+  great:    "I love hearing that. Your good days make mine better. 😄",
+  okay:     "An okay day is still a day you got through. I'm proud of you. 🙂",
+  tired:    "Please rest tonight. Water, food, then sleep. You've done enough. 😴💛",
+  stressed: "Breathe. One thing at a time, and you don't carry it alone. I'm right here. 💪"
+};
+
+// Extra replies when her message contains one of these words: [ [words], reply ]
+const KEYWORDS = [
+  [["exam","cat","test","assignment"], "Exams and assignments don't stand a chance against you."],
+  [["hungry","food","lunch","dinner"], "Go eat something good right now. That's an order. 🍽️"],
+  [["miss","lonely","alone"],          "I miss you too. Two campuses, one heart. ❤️"],
+  [["friend","friends"],               "Good friends make campus feel like home. Greet them for me."],
+  [["lecture","lecturer","class"],     "Tell me the best thing you learned today when we talk."]
+];
+
+/* =====================================================
+   CODE BELOW: you do not need to change anything
+   ===================================================== */
+const $ = id => document.getElementById(id);
+const steps = [...document.querySelectorAll("[data-step]")];
+const state = { step: 0, mood: "" };
+
+// Put the names from CONFIG into the page
+document.querySelectorAll(".meName").forEach(e => e.textContent = CONFIG.myName);
+document.querySelectorAll(".herName").forEach(e => e.textContent = CONFIG.herName);
+document.title = "Hello, " + CONFIG.herName;
+
+// Show step n, update the progress bar, move keyboard focus
+function go(n){
+  state.step = n;
+  steps.forEach(s => s.hidden = Number(s.dataset.step) !== n);
+  [...$("dots").children].forEach((d, i) => d.classList.toggle("on", i < n));
+  const t = steps[n].querySelector("textarea,h2,h1");
+  if (t) t.focus({preventScroll:true});
+  window.scrollTo({top:0});
+}
+document.querySelectorAll("[data-next]").forEach(b => b.onclick = () => go(state.step + 1));
+document.querySelectorAll("[data-back]").forEach(b => b.onclick = () => go(state.step - 1));
+
+// Mood buttons: only one can be selected, and Continue unlocks
+document.querySelectorAll(".chip").forEach(chip => chip.onclick = () => {
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+  chip.setAttribute("aria-pressed", "true");
+  state.mood = chip.dataset.mood;
+  $("moodNext").disabled = false;
+});
+
+// Continue unlocks only when she has typed at least 3 characters
+$("day").oninput = () => { $("dayNext").disabled = $("day").value.trim().length < 3; };
+
+// Add a chat bubble. textContent is used so typed text can never run as code.
+function bubble(cls, who, text){
+  const d = document.createElement("div");
+  d.className = "bubble " + cls;
+  if (who){
+    const p = document.createElement("p");
+    p.className = "who";
+    p.textContent = who;
+    d.appendChild(p);
+  }
+  d.appendChild(document.createTextNode(text));
+  $("thread").appendChild(d);
+}
+
+// Build your replies: mood reply + up to 2 keyword replies + closing line
+function buildReplies(day, need){
+  const out = [MOOD_REPLIES[state.mood]];
+  const t = (day + " " + need).toLowerCase();
+  KEYWORDS.filter(k => k[0].some(w => t.includes(w))).slice(0, 2).forEach(k => out.push(k[1]));
+  out.push(need ? "About what you asked for: noted, and I'll make it happen. ❤️"
+                : "I read every word. A longer reply is coming soon. ❤️");
+  return out;
+}
+
+// Send her answers to Formspree. Returns true ONLY if it really worked.
+async function submit(payload){
+  if (CONFIG.formUrl.includes("YOUR_FORM_ID")) return false; // not set up yet
+  try{
+    const r = await fetch(CONFIG.formUrl, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+
+$("sendBtn").onclick = async () => {
+  const day = $("day").value.trim();
+  const need = $("need").value.trim();
+  const payload = { from: CONFIG.herName, mood: state.mood, day, need, sentAt: new Date().toString() };
+
+  $("sendBtn").disabled = true;                // prevents double submission
+  $("sendBtn").textContent = "Sending...";
+
+  const sent = await submit(payload);
+  go(4);
+
+  // Her message, then your replies one by one
+  bubble("her", "", state.mood + "\n\n" + day + (need ? "\n\nI need: " + need : ""));
+  buildReplies(day, need).forEach((txt, i) =>
+    setTimeout(() => bubble("him", CONFIG.myName, txt), 700 * (i + 1)));
+
+  const st = $("status");
+  if (sent){
+    st.className = "status ok";
+    st.textContent = "Delivered to " + CONFIG.myName + " ✓";
+  }else{
+    // Fallback: WhatsApp link with her message pre-filled
+    st.className = "status warn";
+    st.textContent = "Couldn't deliver automatically. Tap the button below to send it.";
+    const wa = $("waBtn");
+    wa.href = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(
+      "HELLO " + CONFIG.myName + "! Mood: " + state.mood + "\nMy day: " + day + (need ? "\nI need: " + need : ""));
+    wa.hidden = false;
+  }
+};
+</script>
+</body>
+</html>
